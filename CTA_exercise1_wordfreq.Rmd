@@ -1,6 +1,6 @@
 ---
 title: "CTA_exercise1_wordfreq"
-author: "Marion Lieutaud"
+author: "Marion Lieutaud & class"
 date: "28/01/2026"
 output: html_document
 ---

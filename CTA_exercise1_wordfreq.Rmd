@@ -1,7 +1,7 @@
 ---
 title: "CTA_exercise1_wordfreq"
 author: "Marion Lieutaud"
-date: "1/31/2024"
+date: "28/01/2026"
 output: html_document
 ---
 

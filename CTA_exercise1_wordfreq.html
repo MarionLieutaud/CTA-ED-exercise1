@@ -997,14 +997,7 @@ edbf_counts_both &lt;- edbf_term_counts_genre %&gt;%
 <li>Choose another set of terms by which to filter (e.g., race-related
 words) and plot their frequency over time.</li>
 </ol>
-<pre class="r"><code># show me
-edbf_term_counts_genre $raceword &lt;- as.integer(grepl(&quot;race|racial|ethnic|ethnicity|racism|xenophobic|xenophobia&quot;, 
-                                            x = edbf_term_counts_genre$word))
-
-table(edbf_term_counts_genre $raceword )</code></pre>
-<pre><code>## 
-##     0     1 
-## 76992   119</code></pre>
+<pre class="r"><code># show me</code></pre>
 <ol start="3" style="list-style-type: decimal">
 <li>Knit your document (click ‘Knit’ towards the top of your screen)
 when you’ve completed your exercise. It should create an html output

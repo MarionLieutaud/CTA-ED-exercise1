@@ -1,7 +1,7 @@
 ---
-title: "CTA_exercise1_wordfreq - with answers"
-author: "Marion Lieutaud & class"
-date: "28/01/2026"
+title: "CTA_exercise1_wordfreq"
+author: "Zhitong Chen"
+date: "03/02/2026"
 output: html_document
 ---
 
@@ -51,12 +51,11 @@ The first task, then, is to read in these data. We can do this with the `read_cs
 
 The `read_csv()` function takes the .csv file and loads it into the working environment as a data frame object called "edbfdata." We can call this object anything though. Try changing the name of the object before the <- arrow. Note that R does not allow names with spaces in, however. It is also not a good idea to name the object something beginning with numbers, as this means you have to call the object within ` marks.
 
-```{r}
-edbfdata <- read_csv("data/wordfreq/edbookfestall.csv")
-```
+
 
 If you're working on this document from your own computer ("locally"), without cloning the Github repo, you can directly download the Edinburgh Fringe data in the following way:
-```{r, eval = F}
+```{r}
+library(tidyverse)
 edbfdata <- read_csv("https://raw.githubusercontent.com/cjbarrie/RDL-Ed/main/02-text-as-data/data/edbookfestall.csv")
 ```
 
@@ -289,6 +288,11 @@ A set of packages called <tt>gender</tt> and <tt>genderdata</tt> used to make th
 
 Given that the most common gender associated with a given name changes over time, the function also allows us to specify the range of years for the cohort in question whose gender we are inferring. Given that we don't know how wide the cohort of artists is that we have here, we could specify a broad range of 1920-2000.
 
+```{r}
+install.packages
+("gender")
+```
+
 ```{r, eval =F}
 genpred <- gender(gendes$name,
        years = c(1920, 2000))
@@ -362,19 +366,18 @@ head(totprops)
 Once we have our proportions for all names, we can then merge these back with the names of our artists from the Edinburgh Fringe Book Festival. We can then easily plot the proportion of artists at the Festival who are male versus female in each year of the Festival. 
 
 ```{r}
-
 ednameprops <- merge(totprops, gendes, by = "name")
-
+library(ggthemes)
 ggplot(ednameprops, aes(x=year, fill = factor(sex))) +
   geom_bar(position = "fill") +
   xlab("Year") +
   ylab("% women authors") +
   labs(fill="") +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  theme_tufte(base_family = "Helvetica") +
+  theme_tufte(base_family = "Arial") +
   geom_abline(slope=0, intercept=0.5,  col = "black",lty=2)
-
 ```
+
 
 What can we conclude form this graph?
 
@@ -395,6 +398,8 @@ Do we notice anything about these names? What does this tell us about the potent
 
 ```{r}
 # Go through the same process. I've highlighted the differences
+install.packages("dplyr")
+library(dplyr)
 evdes_genre <- edbfdata %>%
   select(description, year, genre) # but include genre variable here
 
@@ -402,6 +407,18 @@ evtsperyr_genre <- evdes_genre %>%
   mutate(obs=1) %>%
   group_by(year, genre) %>% # group not only by year but also by genre
   summarise(sum_events = sum(obs))
+
+options(
+  repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"),
+  pkgType = "binary"
+)
+
+install.packages("stringr")
+install.packages("tidyverse")
+install.packages("tidytext")
+library(stringr)
+library(tidytext)
+library(dplyr)
 
 tidy_des_genre <- evdes_genre %>% 
   mutate(desc = tolower(description)) %>%
@@ -427,12 +444,16 @@ edbf_counts_children <- edbf_term_counts_genre %>%
   summarise(sum_wom = sum(n),
             year_total= min(year_total))
 
+install.packages("ggplot2")  
+library(ggplot2)
 ggplot(edbf_counts_children, aes(year, sum_wom / year_total, group=1)) +
   geom_line() +
   xlab("Year") +
   ylab("% gender-related words") +
   scale_y_continuous(labels = scales::percent_format(),
                      expand = c(0, 0), limits = c(0, NA)) +
+install.packages("ggthemes")
+library(ggthemes)
   theme_tufte(base_family = "Helvetica") 
 ```
 
@@ -458,9 +479,50 @@ ggplot(edbf_counts_both, aes(year, sum_wom / year_total, group=genre, color=genr
 2. Choose another set of terms by which to filter (e.g., race-related words) and plot their frequency over time.
 
 ```{r}
-# show me
+edbf_term_counts_race <- tidy_des_genre %>% 
+  group_by(year, genre) %>%
+  count(word, sort = TRUE)
+
+race_terms <- "race|racial|racism|racist|ethnic|ethnicity|diversity|minority|migration|migrant|immigrant|colonial|colonialism|slavery|slave|diaspora|refugee|asylum"
+
+edbf_term_counts$raceword <- as.integer(grepl(race_terms,
+                                             x = edbf_term_counts$word))
+
+edbf_counts_race <- edbf_term_counts %>%
+  group_by(year) %>%
+  mutate(year_total = sum(n)) %>%
+  filter(raceword == 1) %>%
+  summarise(sum_race = sum(n),
+            year_total = min(year_total))
+
+ggplot(edbf_counts_race, aes(year, sum_race / year_total, group = 1)) +
+  geom_line(color = "steelblue") +
+  xlab("Year") +
+  ylab("% race-related words") +
+  scale_y_continuous(labels = scales::percent_format(),
+                     expand = c(0, 0), limits = c(0, NA)) +
+  theme_tufte(base_family = "Helvetica")
+
+edbf_counts_gender <- edbf_counts %>%
+  mutate(type = "Gender")
+
+edbf_counts_race2 <- edbf_counts_race %>%
+  rename(sum_wom = sum_race) %>%
+  mutate(type = "Race")
+
+both <- bind_rows(edbf_counts_gender, edbf_counts_race2)
+
+ggplot(both, aes(year, sum_wom / year_total, color = type)) +
+  geom_line() +
+  ylab("% of keywords in descriptions") +
+  scale_y_continuous(labels = scales::percent_format(),
+                     expand = c(0, 0), limits = c(0, NA)) +
+  theme_tufte(base_family = "Helvetica")
+
 ```
 
 
+
 3. Knit your document (click 'Knit' towards the top of your screen) when you've completed your exercise. It should create an html output file. 
+
 
